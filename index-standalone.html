@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS AI Agent</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='glow' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2300d4ff'/%3E%3Cstop offset='100%25' style='stop-color:%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='%230a0f1a' stroke='url(%23glow)' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='35' fill='none' stroke='%2300d4ff' stroke-width='1' opacity='0.3'/%3E%3Cpath d='M50 20 L55 45 L80 50 L55 55 L50 80 L45 55 L20 50 L45 45 Z' fill='url(%23glow)'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2300d4ff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --jarvis-primary: #00d4ff;
+      --jarvis-secondary: #7c3aed;
+      --jarvis-accent: #f59e0b;
+      --jarvis-dark: #0a0f1a;
+      --jarvis-surface: #111827;
+      --jarvis-glow: rgba(0, 212, 255, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background-color: var(--jarvis-dark);
+      color: #e5e7eb;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grid Background */
+    .grid-bg {
+      background-image: 
+        linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    /* Scan Lines Effect */
+    .scan-lines::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 212, 255, 0.03) 2px,
+        rgba(0, 212, 255, 0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* Glass Effect */
+    .glass {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 212, 255, 0.1);
+    }
+
+    .glass-strong {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+    }
+
+    /* Glow Effects */
+    .glow-primary {
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.1), inset 0 0 20px rgba(0, 212, 255, 0.05);
+    }
+
+    .glow-text {
+      text-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 0 0 20px rgba(0, 212, 255, 0.5), 0 0 30px rgba(0, 212, 255, 0.3);
+    }
+
+    /* Input Styles */
+    .input-jarvis {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(10, 15, 26, 0.5);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      color: #e5e7eb;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      border-radius: 12px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .input-jarvis:focus {
+      border-color: rgba(0, 212, 255, 0.7);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+    }
+
+    .input-jarvis::placeholder {
+      color: #6b7280;
+    }
+
+    /* Button Styles */
+    .btn-jarvis {
+      position: relative;
+      overflow: hidden;
+      padding: 12px 24px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2));
+      border: 1px solid rgba(0, 212, 255, 0.5);
+      color: var(--jarvis-primary);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-jarvis:hover {
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(124, 58, 237, 0.3));
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+      text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+    }
+
+    .btn-jarvis:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-jarvis::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn-jarvis:hover::before {
+      left: 100%;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.2); }
+      50% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.4), 0 0 30px rgba(0, 212, 255, 0.2); }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    .animate-glow-pulse {
+      animation: glowPulse 2s ease-in-out infinite;
+    }
+
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 212, 255, 0.05);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.3);
+      border-radius: 3px;
+    }
+
+    /* Card Hover */
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+    }
+  </style>
+</head>
+<body class="grid-bg scan-lines">
+  <!-- Ambient Glow Effects -->
+  <div style="position: fixed; top: 0; left: 25%; width: 384px; height: 384px; background: rgba(0, 212, 255, 0.05); border-radius: 50%; filter: blur(100px); pointer-events: none;"></div>
+  <div style="position: fixed; bottom: 0; right: 25%; width: 384px; height: 384px; background: rgba(124, 58, 237, 0.05); border-radius: 50%; filter: blur(100px); pointer-events: none;"></div>
+
+  <!-- Header -->
+  <header class="glass" style="position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0, 212, 255, 0.2);">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 16px 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="position: relative; width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2)); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.1), inset 0 0 20px rgba(0, 212, 255, 0.05);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L14 8L20 9L15 14L17 21L12 17L7 21L9 14L4 9L10 8L12 2Z" fill="#00d4ff"/>
+            </svg>
+            <div style="position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; background: #22c55e; border-radius: 50%;"></div>
+          </div>
+          <div>
+            <h1 style="font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: bold; color: var(--jarvis-primary); text-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 0 0 20px rgba(0, 212, 255, 0.5); letter-spacing: 0.05em;">JARVIS</h1>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.2em;">AI Agent System</p>
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 24px; font-size: 14px; color: #9ca3af;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2">
+              <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+              <path d="M12 2a10 10 0 0 1 10 10"/>
+            </svg>
+            <span>LLM Controller Active</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <path d="M9 9h6M9 13h6M9 17h4"/>
+            </svg>
+            <span id="modelCount">8 Models Ready</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main style="max-width: 1280px; margin: 0 auto; padding: 32px 24px;">
+    <div style="display: grid; grid-template-columns: 1fr; gap: 32px;" id="mainGrid">
+      <!-- Chat Area -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Workflow Visualization -->
+        <div id="workflowSection" style="display: none;" class="glass-strong animate-fade-in-up">
+          <div style="padding: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+              <h3 style="font-family: 'Orbitron', sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: #e5e7eb; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                JARVIS Processing Workflow
+              </h3>
+              <span id="progressPercent" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--jarvis-primary);">0%</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div style="height: 4px; background: var(--jarvis-surface); border-radius: 9999px; margin-bottom: 32px; overflow: hidden;">
+              <div id="progressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--jarvis-primary), var(--jarvis-secondary)); transition: width 0.5s ease-out;"></div>
+            </div>
+
+            <!-- Stages -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;" id="stagesContainer">
+              <!-- Stages will be rendered here -->
+            </div>
+
+            <!-- Completed Tasks -->
+            <div id="completedTasksSection" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(0, 212, 255, 0.2); display: none;">
+              <h4 style="font-family: 'Orbitron', sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #9ca3af; margin-bottom: 12px;">Completed Tasks</h4>
+              <div id="completedTasks"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="glass-strong" style="padding: 24px; min-height: 500px; display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(0, 212, 255, 0.2);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <h2 style="font-family: 'Orbitron', sans-serif; font-size: 18px; text-transform: uppercase; letter-spacing: 0.1em; color: #e5e7eb;">Neural Interface</h2>
+          </div>
+
+          <div id="messagesContainer" style="flex: 1; overflow-y: auto; max-height: 400px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px;">
+            <!-- Messages will be rendered here -->
+          </div>
+
+          <!-- Input Form -->
+          <form id="chatForm" style="position: relative;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <input type="text" id="messageInput" class="input-jarvis" placeholder="Enter your request..." style="padding-right: 48px;">
+              <button type="submit" id="sendBtn" class="btn-jarvis" style="position: absolute; right: 4px; padding: 8px 12px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Model Panel -->
+        <div class="glass card-hover" style="padding: 20px; border-radius: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <h3 style="font-family: 'Orbitron', sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: #e5e7eb; display: flex; align-items: center; gap: 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <path d="M9 9h6M9 13h6M9 17h4"/>
+              </svg>
+              AI Model Pool
+            </h3>
+            <span id="activeModels" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--jarvis-primary);">8 Active</span>
+          </div>
+
+          <!-- Summary Badges -->
+          <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+            <div style="flex: 1; padding: 12px; border-radius: 12px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); text-align: center;">
+              <p id="availableCount" style="font-family: 'Orbitron', sans-serif; font-size: 20px; color: #22c55e;">6</p>
+              <p style="font-size: 12px; color: #9ca3af;">Available</p>
+            </div>
+            <div style="flex: 1; padding: 12px; border-radius: 12px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); text-align: center;">
+              <p id="busyCount" style="font-family: 'Orbitron', sans-serif; font-size: 20px; color: #f59e0b;">2</p>
+              <p style="font-size: 12px; color: #9ca3af;">Busy</p>
+            </div>
+            <div style="flex: 1; padding: 12px; border-radius: 12px; background: rgba(107, 114, 128, 0.1); border: 1px solid rgba(107, 114, 128, 0.2); text-align: center;">
+              <p style="font-family: 'Orbitron', sans-serif; font-size: 20px; color: #6b7280;">8</p>
+              <p style="font-size: 12px; color: #9ca3af;">Total</p>
+            </div>
+          </div>
+
+          <!-- Model List -->
+          <div id="modelList" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Models will be rendered here -->
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="glass" style="padding: 20px; border-radius: 16px;">
+          <h3 style="font-family: 'Orbitron', sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: #e5e7eb; display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+              <path d="M12 2L14 8L20 9L15 14L17 21L12 17L7 21L9 14L4 9L10 8L12 2Z"/>
+            </svg>
+            Quick Actions
+          </h3>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button onclick="setQuickAction('Generate a futuristic cityscape with flying vehicles')" class="glass" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(0, 212, 255, 0.1); transition: all 0.3s; text-align: left; color: #e5e7eb; background: rgba(17, 24, 39, 0.3);">
+              <span style="font-size: 20px;">🎨</span>
+              <span style="font-size: 14px;">Generate Image</span>
+            </button>
+            <button onclick="setQuickAction('Write a Python function to sort a list using quicksort')" class="glass" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(0, 212, 255, 0.1); transition: all 0.3s; text-align: left; color: #e5e7eb; background: rgba(17, 24, 39, 0.3);">
+              <span style="font-size: 20px;">💻</span>
+              <span style="font-size: 14px;">Write Code</span>
+            </button>
+            <button onclick="setQuickAction('Analyze the trends in artificial intelligence research')" class="glass" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(0, 212, 255, 0.1); transition: all 0.3s; text-align: left; color: #e5e7eb; background: rgba(17, 24, 39, 0.3);">
+              <span style="font-size: 20px;">🔍</span>
+              <span style="font-size: 14px;">Analyze Data</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="glass" style="padding: 20px; border-radius: 16px;">
+          <h3 style="font-family: 'Orbitron', sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: #e5e7eb; display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            System Status
+          </h3>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0, 212, 255, 0.1);">
+              <span style="font-size: 14px; color: #9ca3af;">LLM Controller</span>
+              <span style="font-size: 14px; font-family: 'JetBrains Mono', monospace; color: #22c55e;">Active</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0, 212, 255, 0.1);">
+              <span style="font-size: 14px; color: #9ca3af;">HuggingFace</span>
+              <span style="font-size: 14px; font-family: 'JetBrains Mono', monospace; color: #22c55e;">Connected</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0, 212, 255, 0.1);">
+              <span style="font-size: 14px; color: #9ca3af;">Model Pool</span>
+              <span style="font-size: 14px; font-family: 'JetBrains Mono', monospace; color: var(--jarvis-primary);">8 Models</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+              <span style="font-size: 14px; color: #9ca3af;">Response Time</span>
+              <span style="font-size: 14px; font-family: 'JetBrains Mono', monospace; color: var(--jarvis-accent);">~2.3s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer style="position: relative; z-index: 30; border-top: 1px solid rgba(0, 212, 255, 0.1); padding: 16px 0;">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280;">
+      <span>J.A.R.V.I.S. v1.0 — Microsoft Research</span>
+      <span style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: glowPulse 2s ease-in-out infinite;"></span>
+        All systems operational
+      </span>
+    </div>
+  </footer>
+
+  <script>
+    // AI Models Data
+    const AVAILABLE_MODELS = [
+      { id: 'gpt-4', name: 'GPT-4', provider: 'OpenAI', capability: 'text', status: 'available', icon: '📝' },
+      { id: 'claude-3', name: 'Claude 3', provider: 'Anthropic', capability: 'text', status: 'available', icon: '📝' },
+      { id: 'stable-diffusion-xl', name: 'Stable Diffusion XL', provider: 'Stability AI', capability: 'image', status: 'available', icon: '🎨' },
+      { id: 'whisper', name: 'Whisper', provider: 'OpenAI', capability: 'audio', status: 'available', icon: '🎧' },
+      { id: 'dalle-3', name: 'DALL-E 3', provider: 'OpenAI', capability: 'image', status: 'busy', icon: '🎨' },
+      { id: 'code-llama', name: 'Code Llama', provider: 'Meta', capability: 'code', status: 'available', icon: '💻' },
+      { id: 'speech-05', name: 'Speech-05', provider: 'OpenAI', capability: 'audio', status: 'busy', icon: '🎧' },
+      { id: 'sam-2', name: 'SAM 2', provider: 'Meta', capability: 'image', status: 'available', icon: '🎨' },
+    ];
+
+    // Workflow Stages
+    const STAGES = [
+      { key: 'task_planning', label: 'Task Planning', description: 'Analyzing request' },
+      { key: 'model_selection', label: 'Model Selection', description: 'Selecting AI models' },
+      { key: 'task_execution', label: 'Task Execution', description: 'Running models' },
+      { key: 'response_generation', label: 'Response', description: 'Generating output' },
+    ];
+
+    // State
+    let messages = [];
+    let isProcessing = false;
+    let completedTasks = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      renderInitialMessage();
+      renderModels();
+      renderStages();
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      document.getElementById('chatForm').addEventListener('submit', handleSubmit);
+    }
+
+    function renderInitialMessage() {
+      messages = [{
+        id: '1',
+        role: 'assistant',
+        content: 'Hello, I am JARVIS. I am an AI system designed to connect various AI models to help you accomplish complex tasks. How may I assist you today?',
+        timestamp: Date.now(),
+      }];
+      renderMessages();
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('messagesContainer');
+      container.innerHTML = messages.map(msg => `
+        <div style="display: flex; gap: 12px; ${msg.role === 'user' ? 'flex-direction: row-reverse;' : ''} animation: fadeInUp 0.5s ease-out forwards;">
+          <div style="width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; ${msg.role === 'user' ? 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1)); border: 1px solid rgba(245, 158, 11, 0.3);' : 'background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2)); border: 1px solid rgba(0, 212, 255, 0.3);'}">
+            ${msg.role === 'user' ? '👤' : '🤖'}
+          </div>
+          <div style="flex: 1; max-width: 85%; ${msg.role === 'user' ? 'text-align: right;' : ''}">
+            <div style="display: inline-block; padding: 12px 20px; border-radius: 16px; ${msg.role === 'user' ? 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1)); border: 1px solid rgba(245, 158, 11, 0.3);' : 'background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(0, 212, 255, 0.2);'}">
+              <p style="color: #e5e7eb; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(msg.content)}</p>
+            </div>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280; margin-top: 4px;">${new Date(msg.timestamp).toLocaleTimeString()}</p>
+          </div>
+        </div>
+      `).join('');
+      
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function renderModels() {
+      const container = document.getElementById('modelList');
+      container.innerHTML = AVAILABLE_MODELS.map(model => `
+        <div class="card-hover" style="padding: 16px; border-radius: 12px; border: 1px solid ${model.status === 'available' ? 'rgba(0, 212, 255, 0.2)' : model.status === 'busy' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; background: ${model.status === 'available' ? 'rgba(17, 24, 39, 0.3)' : model.status === 'busy' ? 'rgba(245, 158, 11, 0.05)' : 'rgba(239, 68, 68, 0.05)'}; opacity: ${model.status === 'unavailable' ? '0.6' : '1'};">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 24px;">${model.icon}</span>
+              <div>
+                <h4 style="font-size: 14px; font-weight: 500; color: #e5e7eb; margin-bottom: 2px;">${model.name}</h4>
+                <p style="font-size: 12px; color: #6b7280;">${model.provider}</p>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: ${model.status === 'available' ? '#22c55e' : model.status === 'busy' ? '#f59e0b' : '#ef4444'};"></span>
+              <span style="font-size: 12px; color: ${model.status === 'available' ? '#22c55e' : model.status === 'busy' ? '#f59e0b' : '#ef4444'};">${model.status.charAt(0).toUpperCase() + model.status.slice(1)}</span>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: #6b7280; line-height: 1.5;">Specialized in ${model.capability} processing</p>
+        </div>
+      `).join('');
+    }
+
+    function renderStages() {
+      const container = document.getElementById('stagesContainer');
+      container.innerHTML = STAGES.map((stage, index) => `
+        <div id="stage-${stage.key}" style="position: relative; padding: 16px; border-radius: 12px; border: 1px solid rgba(0, 212, 255, 0.1); background: rgba(17, 24, 39, 0.3); opacity: 0.5; transition: all 0.3s;">
+          ${index < STAGES.length - 1 ? `<div class="stage-connector" style="position: absolute; top: 50%; right: -16px; width: 16px; height: 2px; background: rgba(0, 212, 255, 0.2);"></div>` : ''}
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <div id="stage-icon-${stage.key}" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; background: var(--jarvis-surface);">
+              <span id="stage-icon-text-${stage.key}">⭕</span>
+            </div>
+            <h4 id="stage-label-${stage.key}" style="font-family: 'Orbitron', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; margin-bottom: 4px;">${stage.label}</h4>
+            <p id="stage-desc-${stage.key}" style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #6b7280;">${stage.description}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateStage(index, status, description = '') {
+      const stage = STAGES[index];
+      const stageEl = document.getElementById(`stage-${stage.key}`);
+      const labelEl = document.getElementById(`stage-label-${stage.key}`);
+      const descEl = document.getElementById(`stage-desc-${stage.key}`);
+      const iconTextEl = document.getElementById(`stage-icon-text-${stage.key}`);
+      const iconContainer = document.getElementById(`stage-icon-${stage.key}`);
+
+      if (status === 'completed') {
+        stageEl.style.background = 'rgba(0, 212, 255, 0.1)';
+        stageEl.style.borderColor = 'rgba(0, 212, 255, 0.4)';
+        stageEl.style.opacity = '1';
+        labelEl.style.color = 'var(--jarvis-primary)';
+        iconTextEl.textContent = '✓';
+        iconContainer.style.background = 'rgba(0, 212, 255, 0.2)';
+      } else if (status === 'active') {
+        stageEl.style.background = 'rgba(124, 58, 237, 0.1)';
+        stageEl.style.borderColor = 'rgba(124, 58, 237, 0.4)';
+        stageEl.style.opacity = '1';
+        stageEl.style.animation = 'glowPulse 2s ease-in-out infinite';
+        labelEl.style.color = 'var(--jarvis-secondary)';
+        iconTextEl.textContent = '⚡';
+        iconContainer.style.background = 'rgba(124, 58, 237, 0.2)';
+      }
+
+      if (description) {
+        descEl.textContent = description;
+      }
+    }
+
+    function updateProgress(progress) {
+      document.getElementById('progressBar').style.width = `${progress}%`;
+      document.getElementById('progressPercent').textContent = `${progress}%`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('messageInput');
+      const userInput = input.value.trim();
+      
+      if (!userInput || isProcessing) return;
+      
+      input.value = '';
+      isProcessing = true;
+      document.getElementById('sendBtn').disabled = true;
+
+      // Add user message
+      messages.push({
+        id: Date.now().toString(),
+        role: 'user',
+        content: userInput,
+        timestamp: Date.now(),
+      });
+      renderMessages();
+
+      // Show processing indicator
+      const processingEl = document.createElement('div');
+      processingEl.id = 'processing-indicator';
+      processingEl.style.cssText = 'display: flex; gap: 12px; animation: fadeInUp 0.5s ease-out forwards;';
+      processingEl.innerHTML = `
+        <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2)); border: 1px solid rgba(0, 212, 255, 0.3); display: flex; align-items: center; justify-content: center;">
+          🤖
+        </div>
+        <div>
+          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 16px; background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(0, 212, 255, 0.2);">
+            <span class="animate-spin" style="display: inline-block;">⚡</span>
+            <span style="color: #9ca3af; font-size: 14px;">Processing...</span>
+          </div>
+        </div>
+      `;
+      document.getElementById('messagesContainer').appendChild(processingEl);
+      document.getElementById('messagesContainer').scrollTop = document.getElementById('messagesContainer').scrollHeight;
+
+      // Show workflow
+      document.getElementById('workflowSection').style.display = 'block';
+      completedTasks = [];
+
+      // Execute workflow
+      try {
+        await executeWorkflow(userInput);
+      } catch (error) {
+        console.error('Workflow error:', error);
+      }
+
+      // Remove processing indicator
+      processingEl.remove();
+      isProcessing = false;
+      document.getElementById('sendBtn').disabled = false;
+    }
+
+    async function executeWorkflow(userInput) {
+      const tasks = [];
+
+      // Stage 1: Task Planning
+      updateStage(0, 'active', 'Analyzing request...');
+      updateProgress(25);
+      await delay(800);
+
+      const planningTask = {
+        id: Date.now().toString(),
+        type: 'planning',
+        description: `Analyzed: "${userInput.substring(0, 50)}${userInput.length > 50 ? '...' : ''}" - Creating execution plan`,
+        status: 'completed',
+      };
+      tasks.push(planningTask);
+      completedTasks.push(planningTask);
+      updateStage(0, 'completed', 'Request analyzed');
+
+      // Stage 2: Model Selection
+      updateStage(1, 'active', 'Selecting AI models...');
+      updateProgress(50);
+      await delay(600);
+
+      const selectedModels = AVAILABLE_MODELS.filter(m =>
+        userInput.toLowerCase().includes(m.capability) || m.capability === 'text'
+      ).slice(0, 2);
+
+      const selectionTask = {
+        id: (Date.now() + 1).toString(),
+        type: 'model_selection',
+        description: `Selected ${selectedModels.length} models: ${selectedModels.map(m => m.name).join(', ')}`,
+        models: selectedModels,
+        status: 'completed',
+      };
+      tasks.push(selectionTask);
+      completedTasks.push(selectionTask);
+      updateStage(1, 'completed', 'Models selected');
+
+      // Stage 3: Task Execution
+      updateStage(2, 'active', 'Executing models...');
+      updateProgress(75);
+      await delay(1000);
+
+      const executionTask = {
+        id: (Date.now() + 2).toString(),
+        type: 'execution',
+        description: 'All AI models executed successfully',
+        status: 'completed',
+      };
+      tasks.push(executionTask);
+      completedTasks.push(executionTask);
+      updateStage(2, 'completed', 'Execution complete');
+
+      // Stage 4: Response Generation
+      updateStage(3, 'active', 'Generating response...');
+      updateProgress(90);
+      await delay(600);
+
+      const responseContent = generateResponse(userInput);
+      updateStage(3, 'completed', 'Complete');
+      updateProgress(100);
+
+      // Add completed tasks to UI
+      renderCompletedTasks();
+
+      // Add assistant message
+      messages.push({
+        id: (Date.now() + 3).toString(),
+        role: 'assistant',
+        content: responseContent,
+        timestamp: Date.now(),
+        tasks,
+      });
+      renderMessages();
+
+      // Hide workflow after a delay
+      await delay(1500);
+      document.getElementById('workflowSection').style.display = 'none';
+      updateProgress(0);
+      renderStages();
+    }
+
+    function renderCompletedTasks() {
+      const section = document.getElementById('completedTasksSection');
+      const container = document.getElementById('completedTasks');
+      
+      section.style.display = 'block';
+      container.innerHTML = completedTasks.map(task => `
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; background: rgba(17, 24, 39, 0.3); border: 1px solid rgba(0, 212, 255, 0.1); margin-bottom: 8px;">
+          <span style="color: var(--jarvis-primary);">✓</span>
+          <div style="flex: 1;">
+            <p style="font-size: 14px; color: #e5e7eb;">${task.description}</p>
+            ${task.models ? `<p style="font-size: 12px; color: var(--jarvis-primary); margin-top: 4px;">Models: ${task.models.map(m => m.name).join(', ')}</p>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function generateResponse(input) {
+      const lowerInput = input.toLowerCase();
+      
+      if (lowerInput.includes('image') || lowerInput.includes('generate') || lowerInput.includes('create') || lowerInput.includes('draw')) {
+        return "I've analyzed your image generation request. Connecting to Stable Diffusion XL through HuggingFace... For optimal results, please specify:\n\n• Subject matter\n• Artistic style\n• Lighting preferences\n• Composition details\n\nWhat visual elements would you like me to create?";
+      }
+      if (lowerInput.includes('code') || lowerInput.includes('program') || lowerInput.includes('script')) {
+        return "Initiating code generation sequence with Code Llama...\n\nI'll produce clean, well-documented code. Please specify:\n\n• Programming language\n• Core functionality\n• Any dependencies\n• Performance requirements\n\nWhat would you like me to build?";
+      }
+      if (lowerInput.includes('analyze') || lowerInput.includes('analysis')) {
+        return "Deploying analysis protocols through GPT-4 orchestration...\n\nI'm connecting specialized models for comprehensive data processing. Please provide:\n\n• Dataset or source\n• Analysis parameters\n• Specific metrics of interest\n\nWhat subject would you like me to analyze?";
+      }
+      if (lowerInput.includes('audio') || lowerInput.includes('speech') || lowerInput.includes('transcribe')) {
+        return "Routing audio processing through Whisper neural networks...\n\n• For transcription: please provide the audio file\n• For synthesis: specify voice characteristics and content requirements\n\nWhat audio task can I assist you with?";
+      }
+      
+      return "Processing your request through my neural architecture...\n\nI'm coordinating multiple AI models to provide the best possible response. Based on my analysis:\n\n• Your request has been categorized\n• Relevant models have been selected\n• Processing parameters optimized\n\nCould you provide more specific details about your intended outcome?";
+    }
+
+    function setQuickAction(text) {
+      if (!isProcessing) {
+        document.getElementById('messageInput').value = text;
+        document.getElementById('messageInput').focus();
+      }
+    }
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
