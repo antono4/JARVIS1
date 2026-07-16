@@ -1,5 +1,8 @@
 # JARVIS AI Agent Application
 
+> **Created by Antono**
+
+
 A modern, futuristic web interface inspired by Microsoft's JARVIS project. This application demonstrates the concept of using Large Language Models (LLMs) as controllers to orchestrate various AI models for solving complex tasks.
 
 ![JARVIS AI Agent](https://img.shields.io/badge/JARVIS-v1.0-00d4ff?style=for-the-badge)
